@@ -44,15 +44,6 @@ import traceback
 from capstone import *
 
 
-def get_bitness():
-    """Return 32/64 according to the binary bitness."""
-    info = idaapi.get_inf_structure()
-    if info.is_64bit():
-        return 64
-    elif info.is_32bit():
-        return 32
-
-
 def initialize_capstone():
     """
     Initialize the Capstone disassembler.
@@ -61,18 +52,22 @@ def initialize_capstone():
     https://github.com/williballenthin/python-idb/blob/
     2de7df8356ee2d2a96a795343e59848c1b4cb45b/idb/idapython.py#L874
     """
-    procname = idaapi.get_inf_structure().procname.lower()
-    bitness = get_bitness()
+    info = idaapi.get_inf_structure()
+    procname = info.procname.lower()
+    bitness = 64 if info.is_64bit() else 32
     md = None
     prefix = "UNK_"
 
-    # WARNING: mipsl mode not supported here
-    if procname == 'mipsb':
+    if 'mips' in procname:
         prefix = "M_"
-        if bitness == 32:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN)
-        if bitness == 64:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN)
+        if procname == 'mipsb' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsb' and bitness == 64:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_LITTLE_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_LITTLE_ENDIAN)
 
     if procname == "arm":
         prefix = "A_"
@@ -102,7 +97,6 @@ def initialize_capstone():
 def get_call_mnemonics():
     """Return different call instructions based on the arch."""
     procname = idaapi.get_inf_structure().procname.lower()
-    print('[D] procName = {}'.format(procname))
 
     # Default choice
     call_mnemonics = {"call"}

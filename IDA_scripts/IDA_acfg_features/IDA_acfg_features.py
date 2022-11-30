@@ -66,13 +66,16 @@ def initialize_capstone(procname, bitness):
     md = None
     arch = ""
 
-    # WARNING: mipsl mode not supported here
-    if procname == 'mipsb':
+    if 'mips' in procname:
         arch = "MIPS"
-        if bitness == 32:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN)
-        if bitness == 64:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN)
+        if procname == 'mipsb' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsb' and bitness == 64:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_LITTLE_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_LITTLE_ENDIAN)
 
     if procname == "arm":
         arch = "ARM"
@@ -101,41 +104,36 @@ def initialize_capstone(procname, bitness):
 
 def capstone_disassembly(md, ea, size):
     """Disassemble a basic block using Capstone."""
-    try:
-        # Define a fixed constant to extract immediates
-        max_imm = 4096
+    # Define a fixed constant to extract immediates
+    max_imm = 4096
 
-        bb_heads = list()
-        bb_mnems = list()
-        bb_disasm = list()
-        bb_numerics = list()
+    bb_heads = list()
+    bb_mnems = list()
+    bb_disasm = list()
+    bb_numerics = list()
 
-        # Get the binary data corresponding to the instruction.
-        binary_data = idc.get_bytes(ea, size)
+    # Get the binary data corresponding to the instruction.
+    binary_data = idc.get_bytes(ea, size)
 
-        # Iterate over each instruction in the BB
-        for i_inst in md.disasm(binary_data, ea):
-            # Get the address
-            bb_heads.append(i_inst.address)
-            # Get the mnemonic
-            bb_mnems.append(i_inst.mnemonic)
-            # Get the disasm
-            bb_disasm.append("{} {}".format(
-                i_inst.mnemonic,
-                i_inst.op_str))
+    # Iterate over each instruction in the BB
+    for i_inst in md.disasm(binary_data, ea):
+        # Get the address
+        bb_heads.append(i_inst.address)
+        # Get the mnemonic
+        bb_mnems.append(i_inst.mnemonic)
+        # Get the disasm
+        bb_disasm.append("{} {}".format(
+            i_inst.mnemonic,
+            i_inst.op_str))
 
-            # Iterate over the operands
-            for op in i_inst.operands:
-                # Type immediate
-                if (op.type == 2):
-                    if op.imm <= max_imm:
-                        bb_numerics.append(op.imm)
+        # Iterate over the operands
+        for op in i_inst.operands:
+            # Type immediate
+            if (op.type == 2):
+                if op.imm <= max_imm:
+                    bb_numerics.append(op.imm)
 
-        return bb_heads, bb_mnems, bb_disasm, bb_numerics
-
-    except Exception as e:
-        print("[!] Capstone exception", e)
-        return list(), list(), list(), list()
+    return bb_heads, bb_mnems, bb_disasm, bb_numerics
 
 
 def get_basic_blocks(fva):
@@ -232,37 +230,32 @@ def run_acfg_features(idb_path, fva_list, output_dir):
 
     # Iterate over each function
     for fva in fva_list:
-        try:
-            start_time = time.time()
-            nodes_set, edges_set = set(), set()
-            bbs_dict = dict()
+        start_time = time.time()
+        nodes_set, edges_set = set(), set()
+        bbs_dict = dict()
 
-            for bb in get_basic_blocks(fva):
-                # CFG
-                nodes_set.add(bb.va)
-                for dest_ea in bb.succs:
-                    edges_set.add((bb.va, dest_ea))
-                # BB-level features
-                bbs_dict[bb.va] = get_bb_features(bb, string_list, md, arch)
+        for bb in get_basic_blocks(fva):
+            # CFG
+            nodes_set.add(bb.va)
+            for dest_ea in bb.succs:
+                edges_set.add((bb.va, dest_ea))
+            # BB-level features
+            bbs_dict[bb.va] = get_bb_features(bb, string_list, md, arch)
 
-            # Function-level features
-            function_features = get_function_features(
-                fva, bbs_dict, len(edges_set))
+        # Function-level features
+        function_features = get_function_features(
+            fva, bbs_dict, len(edges_set))
 
-            elapsed_time = time.time() - start_time
+        elapsed_time = time.time() - start_time
 
-            func_dict = {
-                'nodes': list(nodes_set),
-                'edges': list(edges_set),
-                'features': function_features,
-                'basic_blocks': bbs_dict,
-                'elapsed_time': elapsed_time,
-            }
-            output_dict[idb_path][hex(fva)] = func_dict
-
-        except Exception as e:
-            print("[!] Exception: skipping function fva: %d" % fva)
-            print(e)
+        func_dict = {
+            'nodes': list(nodes_set),
+            'edges': list(edges_set),
+            'features': function_features,
+            'basic_blocks': bbs_dict,
+            'elapsed_time': elapsed_time,
+        }
+        output_dict[idb_path][hex(fva)] = func_dict
 
     out_name = os.path.basename(idb_path.replace(".i64", "_acfg_features.json"))
     with open(os.path.join(output_dir, out_name), "w") as f_out:

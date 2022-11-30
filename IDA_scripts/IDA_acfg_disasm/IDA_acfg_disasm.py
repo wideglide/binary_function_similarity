@@ -50,6 +50,8 @@ def convert_procname_to_str(procname, bitness):
     """Convert the arch and bitness to a std. format."""
     if procname == 'mipsb':
         return "mips-{}".format(bitness)
+    if procname == 'mipsl':
+        return "mipsel-{}".format(bitness)
     if procname == "arm":
         return "arm-{}".format(bitness)
     if "pc" in procname:
@@ -79,13 +81,16 @@ def initialize_capstone(procname, bitness):
     md = None
     prefix = "UNK_"
 
-    # WARNING: mipsl mode not supported here
-    if procname == 'mipsb':
+    if 'mips' in procname:
         prefix = "M_"
-        if bitness == 32:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 | CS_MODE_BIG_ENDIAN)
-        if bitness == 64:
-            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 | CS_MODE_BIG_ENDIAN)
+        if procname == 'mipsb' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsb' and bitness == 64:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_LITTLE_ENDIAN)
+        elif procname == 'mipsl' and bitness == 32:
+            md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_LITTLE_ENDIAN)
 
     if procname == "arm":
         prefix = "A_"

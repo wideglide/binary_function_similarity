@@ -76,6 +76,7 @@ def export_idb(input_path, output_path):
         ida_output = str(subprocess.check_output([
             IDA_PATH,
             "-L{}".format(LOG_PATH),  # name of the log file. "Append mode"
+            "-P+",  # compress IDA database
             "-a-",  # enables auto analysis
             "-B",  # batch mode. IDA will generate .IDB and .ASM files
             "-o{}".format(output_path),
@@ -140,8 +141,9 @@ def directory_walk(input_folder, output_folder):
 @click.option('--db1', is_flag=True)
 @click.option('--db2', is_flag=True)
 @click.option('--dbvuln', is_flag=True)
+@click.option('--dbdeb', is_flag=True)
 @click.option('--test', is_flag=True)
-def main(db1, db2, dbvuln, test):
+def main(db1, db2, dbvuln, dbdeb, test):
     """Launch IDA Pro and export the IDBs."""
     if not isfile(IDA_PATH):
         print("[!] Error: IDA_PATH:{} not valid".format(IDA_PATH))
@@ -164,6 +166,11 @@ def main(db1, db2, dbvuln, test):
         directory_walk(
             join(BIN_FOLDER, 'Dataset-Vulnerability'),
             join(IDB_FOLDER, 'Dataset-Vulnerability'))
+    if dbdeb:
+        no_action = False
+        directory_walk(
+            join(BIN_FOLDER, 'Ds-Debian'),
+            join(IDB_FOLDER, 'Ds-Debian'))
     if test:
         no_action = False
         output_folder = join(IDB_FOLDER, "Dataset-1")

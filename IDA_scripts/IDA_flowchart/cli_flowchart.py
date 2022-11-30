@@ -88,6 +88,7 @@ def main(idbs_folder, output_csv):
 
                 cmd = [IDA_PATH,
                        '-A',
+                       '-P+',
                        '-L{}'.format(LOG_PATH),
                        '-S{}'.format(IDA_PLUGIN),
                        '-Oflowchart:{}:{}'.format(

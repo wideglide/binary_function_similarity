@@ -76,11 +76,10 @@ def main(json_path, output_dir):
             success_cnt, error_cnt = 0, 0
             start_time = time.time()
             for idb_rel_path in jj.keys():
-                print("\n[D] Processing: {}".format(idb_rel_path))
+                print("[D] Processing: {}".format(idb_rel_path))
 
                 # Convert the relative path into a full path
                 idb_path = join(REPO_PATH, idb_rel_path)
-                print("[D] IDB full path: {}".format(idb_path))
 
                 if not isfile(idb_path):
                     print("[!] Error: {} does not exist".format(idb_path))
@@ -88,6 +87,7 @@ def main(json_path, output_dir):
 
                 cmd = [IDA_PATH,
                        '-A',
+                       '-P+',
                        '-L{}'.format(LOG_PATH),
                        '-S{}'.format(IDA_PLUGIN),
                        '-Oacfg_disasm:{}:{}:{}'.format(
@@ -96,14 +96,11 @@ def main(json_path, output_dir):
                            output_dir),
                        idb_path]
 
-                print("[D] cmd: {}".format(cmd))
-
                 proc = subprocess.Popen(
                     cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = proc.communicate()
 
                 if proc.returncode == 0:
-                    print("[D] {}: success".format(idb_path))
                     success_cnt += 1
                 else:
                     print("[!] Error in {} (returncode={})".format(
