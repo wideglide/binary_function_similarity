@@ -89,7 +89,7 @@ def initialize_capstone(procname, bitness):
             md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_BIG_ENDIAN)
         elif procname == 'mipsl' and bitness == 32:
             md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS32 + CS_MODE_LITTLE_ENDIAN)
-        elif procname == 'mipsl' and bitness == 32:
+        elif procname == 'mipsl' and bitness == 64:
             md = Cs(CS_ARCH_MIPS, CS_MODE_MIPS64 + CS_MODE_LITTLE_ENDIAN)
 
     if procname == "arm":
