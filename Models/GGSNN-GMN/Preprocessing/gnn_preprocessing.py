@@ -97,10 +97,7 @@ def create_graph(nodes, edges):
         list: nodes in the graph
     """
     G = nx.DiGraph()
-    for node in nodes:
-        G.add_node(node)
-    for edge in edges:
-        G.add_edge(edge[0], edge[1])
+    G.update(edges=edges, nodes=nodes)
 
     nodelist = list(G.nodes())
     adj_mat = nx.to_numpy_matrix(G, nodelist=nodelist, dtype=np.int8)
@@ -169,39 +166,34 @@ def create_functions_dict(input_folder, opc_dict):
     Return
         dict: map each function to a graph and features matrix
     """
-    try:
-        functions_dict = defaultdict(dict)
+    functions_dict = defaultdict(dict)
 
-        for f_json in tqdm(os.listdir(input_folder)):
-            if not f_json.endswith(".json"):
-                continue
+    for f_json in tqdm(os.listdir(input_folder), ncols=160):
+        if not f_json.endswith(".json"):
+            continue
 
-            json_path = os.path.join(input_folder, f_json)
-            with open(json_path) as f_in:
-                jj = json.load(f_in)
+        json_path = os.path.join(input_folder, f_json)
+        with open(json_path) as f_in:
+            jj = json.load(f_in)
 
-                idb_path = list(jj.keys())[0]
-                # print("[D] Processing: {}".format(idb_path))
-                j_data = jj[idb_path]
-                del j_data['arch']
+            idb_path = list(jj.keys())[0]
+            # print("[D] Processing: {}".format(idb_path))
+            j_data = jj[idb_path]
+            del j_data['arch']
 
-                # Iterate over each function
-                for fva in j_data:
-                    fva_data = j_data[fva]
-                    g_mat, nodes = create_graph(
-                        fva_data['nodes'], fva_data['edges'])
-                    f_mat = create_features_matrix(
-                        nodes, fva_data, opc_dict)
-                    functions_dict[idb_path][fva] = {
-                        'graph': np_to_scipy_sparse(g_mat),
-                        'opc': np_to_scipy_sparse(f_mat)
-                    }
+            # Iterate over each function
+            for fva in j_data:
+                fva_data = j_data[fva]
+                g_mat, nodes = create_graph(
+                    fva_data['nodes'], fva_data['edges'])
+                f_mat = create_features_matrix(
+                    nodes, fva_data, opc_dict)
+                functions_dict[idb_path][fva] = {
+                    'graph': np_to_scipy_sparse(g_mat),
+                    'opc': np_to_scipy_sparse(f_mat)
+                }
 
-        return functions_dict
-
-    except Exception as e:
-        print("[!] Exception in create_functions_dict\n{}".format(e))
-        return dict()
+    return functions_dict
 
 
 @click.command()
