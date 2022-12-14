@@ -36,8 +36,10 @@
 #                                                                            #
 ##############################################################################
 
+import gzip
 import json
 import math
+import os
 import networkx as nx
 import pandas as pd
 
@@ -79,8 +81,13 @@ class GraphFactoryInference(GraphFactoryBase):
 
         # Load function features
         log.debug("Loading {}".format(feat_path))
-        with open(feat_path) as gfd_in:
-            self._fdict = json.load(gfd_in)
+        _, file_ext = os.path.splitext(feat_path)
+        if file_ext == ".gz":
+            with gzip.open(feat_path) as gfd_in:
+                self._fdict = json.load(gfd_in)
+        else:
+            with open(feat_path) as gfd_in:
+                self._fdict = json.load(gfd_in)
 
         # Initialize the iterator
         self._get_next_pair_it = self._get_next_pair()

@@ -36,8 +36,10 @@
 #                                                                            #
 ##############################################################################
 
+import gzip
 import json
 import math
+import os
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -136,8 +138,13 @@ class GraphFactoryTraining(GraphFactoryBase):
 
         # Load the JSON with functions features
         log.debug("Loading {}".format(feat_path))
-        with open(feat_path) as gfd_in:
-            self._fdict = json.load(gfd_in)
+        _, file_ext = os.path.splitext(feat_path)
+        if file_ext == ".gz":
+            with gzip.open(feat_path) as gfd_in:
+                self._fdict = json.load(gfd_in)
+        else:
+            with open(feat_path) as gfd_in:
+                self._fdict = json.load(gfd_in)
 
     def _select_random_function_pairs(self):
         """
