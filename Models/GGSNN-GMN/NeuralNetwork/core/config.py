@@ -108,7 +108,7 @@ def update_config_datasetone(config_dict, outputdir, featuresdir):
             os.path.join(outputdir, "neg_rank_testing_Dataset-1_sim.csv"),
             os.path.join(outputdir, "neg_testing_Dataset-1_sim.csv"),
             os.path.join(outputdir, "pos_rank_testing_Dataset-1_sim.csv"),
-            os.path.join(outputdir, "pos_testing_Dataset-_sim2.csv")
+            os.path.join(outputdir, "pos_testing_Dataset-1_sim2.csv")
         ],
         features_testing_path=os.path.join(
             featuresdir,
@@ -131,7 +131,7 @@ def update_config_datasettwo(config_dict, outputdir, featuresdir):
             os.path.join(outputdir, "neg_rank_testing_Dataset-2_sim.csv"),
             os.path.join(outputdir, "neg_testing_Dataset-2_sim.csv"),
             os.path.join(outputdir, "pos_rank_testing_Dataset-2_sim.csv"),
-            os.path.join(outputdir, "pos_testing_Dataset-_sim2.csv")
+            os.path.join(outputdir, "pos_testing_Dataset-2_sim2.csv")
         ],
         features_testing_path=os.path.join(
             featuresdir,
@@ -154,6 +154,24 @@ def update_config_datasetvuln(config_dict, outputdir, featuresdir):
             featuresdir,
             "Dataset-Vulnerability",
             "graph_func_dict_opc_200.json")
+    )
+
+
+def update_config_dataset_debian(config_dict, outputdir, featuresdir):
+    """Config for Ds-Debian"""
+    testdir = "/input/Ds-Debian/pairs"
+    config_dict['testing'] = dict(
+        full_tests_inputs=[
+            os.path.join(testdir, "pos_testing_Ds-Debian.csv.gz"),
+            os.path.join(testdir, "neg_testing_Ds-Debian.csv.gz"),
+        ],
+        full_tests_outputs=[
+            os.path.join(outputdir, "pairs_testing_Ds-Debian.csv.gz")
+        ],
+        features_testing_path=os.path.join(
+            featuresdir,
+            "Ds-Debian",
+            "graph_func_dict_opc_200.json.gz")
     )
 
 
@@ -244,6 +262,9 @@ def get_config(args):
             config_dict, args.outputdir, args.featuresdir)
     elif args.dataset == 'vuln':
         update_config_datasetvuln(
+            config_dict, args.outputdir, args.featuresdir)
+    elif args.dataset == 'debian':
+        update_config_dataset_debian(
             config_dict, args.outputdir, args.featuresdir)
 
     return config_dict
